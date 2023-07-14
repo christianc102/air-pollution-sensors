@@ -1,1 +1,13 @@
 NO2USData
+O3USData
+PMUSData
+UAGeoTiffs
+SensorNetsDatabase
+StreamlineTiff/*.sbatch
+StreamlineTiff/*.err
+StreamlineTiff/*.out
+StreamlineTiff/*.Rout
+StreamlineTiff/*.txt
+StreamlineTiff/sing_biocond_3.14.sif
+StreamlineTiff/cb_2018_us_ua10_500k
+StreamlineTiff/.RData
