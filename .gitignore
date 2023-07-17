@@ -11,3 +11,6 @@ StreamlineTiff/*.txt
 StreamlineTiff/sing_biocond_3.14.sif
 StreamlineTiff/cb_2018_us_ua10_500k
 StreamlineTiff/.RData
+Tests
+NetCDFs
+Visualizations

@@ -4,28 +4,22 @@ channels:
   - conda-forge
 
 dependencies:
-  - beautifulsoup4
   - ipython
   - jupyterlab
   - matplotlib
   - numpy
   - opencv
   - pandas
-  - papermill
-  - pillow
   - pip
-  - python>=3.9
+  - python
   - pytorch
   - requests
-  - retrolab
   - rioxarray
   - scipy
   - scikit-learn
   - seaborn
-  - statsmodels
   - torchtext
   - torchvision
   - tqdm
-  - voila
   - xarray
   - xgboost
