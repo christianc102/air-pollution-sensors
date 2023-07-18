@@ -20,6 +20,7 @@ else:
 input_ncdf = f"./NetCDFs/{urban_area}{pollutant}.nc"
 dataset = xr.open_dataset(input_ncdf)
 # .sel(time=slice('2000-01-01', '2000-02-01'))
+times = dataset['time'].dt.strftime("%m/%d/%Y")
 
 mean_data_t_series = dataset.mean(dim=["x", "y"])
 fig = plt.figure()
@@ -29,6 +30,7 @@ plt.xticks(rotation=90)
 plt.savefig(f"./Visualizations/{urban_area}{pollutant}mean_time_series.png")
 
 bounds_dict = {"NO2": 53, "O3": 70, "PM": 35}
+units_dict = {"NO2": "ppb", "O3": "ppb", "PM": u"\u03bcg m$^{-3}$"}
 
 pollution_data = dataset[f"{pollutant} concentration"].squeeze('band')
 fig = plt.figure()
@@ -38,7 +40,8 @@ def animate(frame):
     ax = plt.subplot()
     current_data = pollution_data[frame, :, :]
     img = ax.imshow(current_data, origin='lower', vmin=0, vmax=bounds_dict[pollutant])
-    ax.set_title(f'{pollutant} Frame {frame}')
+    current_time = times[frame].values
+    ax.set_title(f'{pollutant} ({units_dict[pollutant]}) - {current_time}')
     plt.colorbar(img, ax=ax)
 
 num_frames = pollution_data.shape[0]
