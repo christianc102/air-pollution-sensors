@@ -110,7 +110,7 @@ def animate(frame):
     fig.clear()
     ax = plt.subplot()
     current_data = pollution_data[frame, :, :]
-    img = ax.imshow(current_data, origin='lower', vmin=0, vmax=bounds_dict[pollutant])
+    img = ax.imshow(current_data, vmin=0, vmax=bounds_dict[pollutant])
     current_time = times[frame].values
     ax.set_title(f'{pollutant}{units_dict[pollutant]} - {current_time}')
     plt.colorbar(img, ax=ax)
