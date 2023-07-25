@@ -7,7 +7,9 @@ figpath = 'Figures/';
 
 % config
 urb_area = 'LosAngelesLongBeachAnaheimCA';
-pollutant = 'NO2';
+pollutant = 'PM';
+levels = 7;
+max_cycles = 1;
 
 % Set PRINT_FIG=true to export figures
 PRINT_FIG = true;
@@ -72,7 +74,7 @@ dt = 1;%mean(diff(time))/7;
 time = setdiff((2082:6180),[3291,5689,5690]);
 
 %tree = mrDMD_fb(Y(:,1:length(time)),dt,8,1,10, true); %change mrDMD modal tree here
-tree = mrDMD_fb(Y(:,1:length(time)),dt,8,1,10, true); %change mrDMD modal tree here
+tree = mrDMD_fb(Y(:,1:length(time)), dt, 8, max_cycles, levels, true); %change mrDMD modal tree here
 
 [U,S,V] = svd(Y(:,1:length(time)),'econ');
 [~,~,piv] = qr(U(:,1:30)',0);
@@ -115,7 +117,7 @@ colormap(gca,'pink');shading flat
 if PRINT_FIG
     %file_name = strcat(figpath, 'FIG_MRDMD_MAP.fig');
     %savefig(file_name);
-    print([figpath, 'FIG_MRDMD_MAP_', urb_area, pollutant], '-dpdf', '-fillpage');
+    print(strcat(figpath, 'FIG_MRDMD_MAP_', urb_area, pollutant, 'L=', string(levels), 'cyc=', string(max_cycles)), '-dpdf', '-fillpage');
 end
 %% collect and display unique mrDMD modes
 
@@ -138,14 +140,13 @@ for l=1
         Lambda = [Lambda; tree{l,j}.lambda];
 
         figure;
-        display_fig(abs(tree{l,j}.Phi(1:N,1)),mask,[],[]);
+        display_fig_LA(abs(tree{l,j}.Phi(1:N,1)),mask,[],[]);
         colorbar;
         if PRINT_FIG
             %file_name = strcat(figpath, 'FIG_MRDMD_MODE_L=',string(l),'_J=',string(j),'.fig');
             %savefig(file_name);
-            png_name = strcat(figpath, 'FIG_MRDMD_', urb_area, 'BACKGROUND_MODE_L=',string(l),'_J=',string(j),'.png');
+            png_name = strcat(figpath, 'FIG_MRDMD_', urb_area, pollutant, 'BG_MODE_L=',string(l),'_J=',string(j), 'L=', string(levels), 'cyc=', string(max_cycles), '.png');
             saveas(gcf,png_name);
-            disp('test a')
         end
     end
 end
@@ -175,7 +176,7 @@ for l=1:L
         if imag(tree{l,j}.omega*365)>tol
             disp('big mode!')
             figure;
-            display_fig(abs(tree{l,j}.Phi(1:N,ind(kk))),mask,[],[]);
+            display_fig_LA(abs(tree{l,j}.Phi(1:N,ind(kk))),mask,[],[]);
             colorbar; 
             clim([0, 0.02]);
             str = ['Phi97' num2str(l) ',' num2str(j) '_' ...
@@ -183,7 +184,7 @@ for l=1:L
             if PRINT_FIG
                 %file_name = strcat(figpath, 'FIG_MRDMD_MODE_L=',string(l),'_J=',string(j),'.fig');
                 %savefig(file_name);
-                png_name = strcat(figpath, 'FIG_MRDMD_', urb_area, '_MODE_L=',string(l),'_J=',string(j),'.png');
+                png_name = strcat(figpath, 'FIG_MRDMD_', urb_area, pollutant, '_MODE_L=',string(l),'_J=',string(j), 'L=', string(levels), 'cyc=', string(max_cycles), '.png');
                 saveas(gcf,png_name);
             end
         end

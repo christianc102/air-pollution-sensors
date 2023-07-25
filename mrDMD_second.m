@@ -8,7 +8,7 @@ figpath = 'Figures/';
 % config
 urb_area = 'LosAngelesLongBeachAnaheimCA';
 pollutant = 'PM';
-levels = 10;
+levels = 4;
 max_cycles = 1;
 
 % Set PRINT_FIG=true to export figures
@@ -117,7 +117,7 @@ colormap(gca,'pink');shading flat
 if PRINT_FIG
     %file_name = strcat(figpath, 'FIG_MRDMD_MAP.fig');
     %savefig(file_name);
-    print([figpath, 'FIG_MRDMD_MAP_', urb_area, pollutant], '-dpdf', '-fillpage');
+    print(strcat(figpath, 'FIG_MRDMD_MAP_', urb_area, pollutant, 'L=', string(levels), 'cyc=', string(max_cycles)), '-dpdf', '-fillpage');
 end
 %% collect and display unique mrDMD modes
 
@@ -140,14 +140,13 @@ for l=1
         Lambda = [Lambda; tree{l,j}.lambda];
 
         figure;
-        display_fig(abs(tree{l,j}.Phi(1:N,1)),mask,[],[], urb_area);
+        display_fig_LA(abs(tree{l,j}.Phi(1:N,1)),mask,[],[]);
         colorbar;
         if PRINT_FIG
             %file_name = strcat(figpath, 'FIG_MRDMD_MODE_L=',string(l),'_J=',string(j),'.fig');
             %savefig(file_name);
-            png_name = strcat(figpath, 'FIG_MRDMD_', urb_area, pollutant, 'BG_MODE_L=',string(l),'_J=',string(j),'.png');
+            png_name = strcat(figpath, 'FIG_MRDMD_', urb_area, pollutant, 'BG_MODE_L=',string(l),'_J=',string(j), 'L=', string(levels), 'cyc=', string(max_cycles), '.png');
             saveas(gcf,png_name);
-            disp('test a')
         end
     end
 end
@@ -177,7 +176,7 @@ for l=1:L
         if imag(tree{l,j}.omega*365)>tol
             disp('big mode!')
             figure;
-            display_fig(abs(tree{l,j}.Phi(1:N,ind(kk))),mask,[],[]);
+            display_fig_LA(abs(tree{l,j}.Phi(1:N,ind(kk))),mask,[],[]);
             colorbar; 
             clim([0, 0.02]);
             str = ['Phi97' num2str(l) ',' num2str(j) '_' ...
@@ -185,7 +184,7 @@ for l=1:L
             if PRINT_FIG
                 %file_name = strcat(figpath, 'FIG_MRDMD_MODE_L=',string(l),'_J=',string(j),'.fig');
                 %savefig(file_name);
-                png_name = strcat(figpath, 'FIG_MRDMD_', urb_area, pollutant, '_MODE_L=',string(l),'_J=',string(j),'.png');
+                png_name = strcat(figpath, 'FIG_MRDMD_', urb_area, pollutant, '_MODE_L=',string(l),'_J=',string(j), 'L=', string(levels), 'cyc=', string(max_cycles), '.png');
                 saveas(gcf,png_name);
             end
         end

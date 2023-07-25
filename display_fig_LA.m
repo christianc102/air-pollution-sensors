@@ -1,11 +1,6 @@
-function [C, output_args ] = display_fig( x, mask, pivot, cbounds, place)
+function [C, output_args ] = display_fig_LA( x, mask, pivot, cbounds)
 %display_fig Template for displaying image data
 %   Detailed explanation goes here
-    places = ["LosAngelesLongBeachAnaheimCA", "Atlanta"];
-    dims = [[114, 86], [113, 135]];
-    d = dictionary(places, dims);
-    first = d(place)(1);
-    second = d(place)(2);
     snapshot = NaN*zeros(114*86,1);
     snapshot(mask==1) = x;
     
