@@ -8,7 +8,7 @@ figpath = 'Figures/';
 % config
 urb_area = 'LosAngelesLongBeachAnaheimCA';
 pollutant = 'PM';
-levels = 4;
+levels = 13;
 max_cycles = 1;
 
 % Set PRINT_FIG=true to export figures
@@ -21,8 +21,11 @@ mask = ncread([maskpath, urb_area, 'mask.nc'] , 'Urban Area');
 mask(isnan(mask))=0;
 dat(isnan(dat))=0;
 
+% First 4096 days of data, excluding corrupted dates
+% dat = dat(:,:,setdiff((1:4097),3291));
+
 % Second 4096 days of data, excluding corrupted dates
-dat = dat(:,:,setdiff((2082:6180),[3291,5689,5690]));
+dat = dat(:,:,setdiff((2112:6210),[3291,5689,5690]));
 
 %numyears = 16;
 %nweeks = numyears*52;
@@ -34,8 +37,7 @@ for i=1:size(dat,3)
     Y(:,i) = Band(mask==1);
 end
 
-[m,n] = size(mask);
-N = m*n;
+%[m,n] = size(mask);
 
 % Construct cost function as implemented in sensors-cost-paper code
 %f2 = ones(m,n);
@@ -77,8 +79,32 @@ time = setdiff((2082:6180),[3291,5689,5690]);
 tree = mrDMD_fb(Y(:,1:length(time)), dt, 8, max_cycles, levels, true); %change mrDMD modal tree here
 
 [U,S,V] = svd(Y(:,1:length(time)),'econ');
-[~,~,piv] = qr(U(:,1:30)',0);
-qdeim = piv(1:30);
+% [~,~,piv] = qr(U(:,1:30)',0);
+% qdeim = piv(1:30);
+
+% finding optimal truncation (r) ? using optimal SVHT
+sigs = diag(S);
+beta = size(Y(:,1:length(time)), 1) / size(Y(:,1:length(time)),2);
+thresh = optimal_SVHT_coef(beta,0) * median(sigs);
+disp(length(sigs(sigs>thresh)))
+figure
+semilogy(sigs, '-ok', 'LineWidth', 1.5)
+grid on
+hold on
+xlim([0 length(sigs)])
+ylim([1 10^6])
+
+semilogy(sigs(sigs>thresh), 'bo', 'LineWidth', 1.5)
+plot([-20 length(sigs)], [thresh thresh], 'b--', 'LineWidth', 2)
+
+if PRINT_FIG
+    png_name = strcat(figpath, 'optimalSVHT', urb_area, pollutant, '.png');
+    saveas(gcf,png_name);
+end
+% results - r 
+% LA NO2 = 992
+% LA O3 = 911
+% LA PM = 1023
 %% plot amplitudes of 1990 mrDMD
 
 %indt below adds lines to the tree figure to see when in time series it
@@ -86,10 +112,10 @@ qdeim = piv(1:30);
 %mkelp: create test set of 10%, seed it. See old error code?
 
 %indt = [12, 120, 1000, 300, 900, 100, 2000, 3000, 2500, 3500]; % measure in summer months; mkelp adjust here for test/train set
-rng(10)
+% rng(10)
 %indt = randperm(2082, 400) %extrapolate
-indt = randperm(4000, 400); %interpolate
-
+% indt = randperm(4000, 400); %interpolate
+figure
 [ptree, map, low_f_cutoff] = mrDMD_map(tree);
 [L, J] = size(tree);
 
@@ -99,13 +125,13 @@ shortInt = tree{L,J}.T;
 
 T = datetime(2000,1,1,0,0,0) + days(time(1:shortInt:end));
 set(gca, 'YTick', 0.5:(L+0.5), 'YTickLabel', low_f_cutoff*365);
-%set(gca,'XTick', (0:J-1) + 0.5,'XTickLabel',num2str([month(T),year(T)],'%d/%d'));
+% set(gca,'XTick', (0:J-1) + 0.5,'XTickLabel',num2str([month(T),year(T)],'%d/%d'));
 axis xy; axis tight; box on; grid on
 
 ylim = get(gca,'ylim');
-
-times = year(datetime(2000,1,1,0,0,0) + days(time(indt)));
-hold on
+% 
+% times = year(datetime(2000,1,1,0,0,0) + days(time(indt)));
+% hold on
 %for i=1:length(indt)
 %    stem(1+indt(i)/shortInt, ylim(2),'k.','LineWidth',1.5)
 %    
@@ -113,12 +139,14 @@ hold on
 
 set(gca, 'XTickLabelRotation',45,'ylim',ylim,'FontSize',12);
 colormap(gca,'pink');shading flat
+colorbar;
 
 if PRINT_FIG
     %file_name = strcat(figpath, 'FIG_MRDMD_MAP.fig');
     %savefig(file_name);
     print(strcat(figpath, 'FIG_MRDMD_MAP_', urb_area, pollutant, 'L=', string(levels), 'cyc=', string(max_cycles)), '-dpdf', '-fillpage');
 end
+return;
 %% collect and display unique mrDMD modes
 
 lmap = []; jmap = [];
@@ -173,8 +201,13 @@ for l=1:L
         Periods = [Periods; tree{l,j}.T];
         Lambda = [Lambda; tree{l,j}.lambda];
         
-        if imag(tree{l,j}.omega*365)>tol
-            disp('big mode!')
+        ind = find(imag(tree{l,j}.omega*365)>tol);
+%       Code from mrDMD paper to produce maps of the modes; however, the 
+%       tol value may not be calibrated correctly, so a lot of modes are
+%       printed and the program takes too long to run. Use
+%       mrDMD_specific_modes_second_half.m
+%
+        for kk=1:length(ind)
             figure;
             display_fig_LA(abs(tree{l,j}.Phi(1:N,ind(kk))),mask,[],[]);
             colorbar; 
@@ -190,8 +223,3 @@ for l=1:L
         end
     end
 end
-%       Code from mrDMD paper to produce maps of the modes; however, the 
-%       tol value may not be calibrated correctly, so a lot of modes are
-%       printed and the program takes too long to run. Use
-%       mrDMD_specific_modes_second_half.m
-%
