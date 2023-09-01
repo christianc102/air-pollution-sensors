@@ -3,12 +3,11 @@
 clear; close all; clc
 ncdfpath = 'NetCDFs/';
 maskpath = 'Masks/';
-figpath = 'Figures/';
+figpath = 'Figures/First/';
 
 % config
 urb_area = 'LosAngelesLongBeachAnaheimCA';
-pollutant = 'PM';
-levels = 13;
+pollutant = 'O3normNO2normratio';
 max_cycles = 1;
 
 % Set PRINT_FIG=true to export figures
@@ -21,11 +20,14 @@ mask = ncread([maskpath, urb_area, 'mask.nc'] , 'Urban Area');
 mask(isnan(mask))=0;
 dat(isnan(dat))=0;
 
+% Short time span test
+% dat = dat(:,:,(129:256));
+
 % First 4096 days of data, excluding corrupted dates
-% dat = dat(:,:,setdiff((1:4097),3291));
+dat = dat(:,:,setdiff((1:4097),3291));
 
 % Second 4096 days of data, excluding corrupted dates
-dat = dat(:,:,setdiff((2112:6210),[3291,5689,5690]));
+%dat = dat(:,:,setdiff((2112:6210),[3291,5689,5690]));
 
 %numyears = 16;
 %nweeks = numyears*52;
@@ -72,17 +74,15 @@ dt = 1;%mean(diff(time))/7;
 %tree2 = mrDMD_fb(Y(:,end-8-831:end-8),dt,10,1,4, true);
 
 % mrDMD, 16 year period beginning in 1990
-%time = setdiff((1:100),[90])';
-time = setdiff((2082:6180),[3291,5689,5690]);
-
-%tree = mrDMD_fb(Y(:,1:length(time)),dt,8,1,10, true); %change mrDMD modal tree here
-tree = mrDMD_fb(Y(:,1:length(time)), dt, 8, max_cycles, levels, true); %change mrDMD modal tree here
+%time = (129:256);
+time = setdiff((1:4097), 3291);
+%time = setdiff((2112:6210),[3291,5689,5690]);
 
 [U,S,V] = svd(Y(:,1:length(time)),'econ');
 % [~,~,piv] = qr(U(:,1:30)',0);
 % qdeim = piv(1:30);
 
-% finding optimal truncation (r) ? using optimal SVHT
+% finding optimal truncation (r) using optimal SVHT
 sigs = diag(S);
 beta = size(Y(:,1:length(time)), 1) / size(Y(:,1:length(time)),2);
 thresh = optimal_SVHT_coef(beta,0) * median(sigs);
@@ -97,15 +97,28 @@ ylim([1 10^6])
 semilogy(sigs(sigs>thresh), 'bo', 'LineWidth', 1.5)
 plot([-20 length(sigs)], [thresh thresh], 'b--', 'LineWidth', 2)
 
-if PRINT_FIG
-    png_name = strcat(figpath, 'optimalSVHT', urb_area, pollutant, '.png');
-    saveas(gcf,png_name);
-end
+%tree = mrDMD_fb(Y(:,1:length(time)),dt,8,1,10, true); %change mrDMD modal tree here
+tree = mrDMD_fb(Y(:,1:length(time)), dt, length(sigs(sigs>thresh)), max_cycles, 13, true); %change mrDMD modal tree here
+
+% if PRINT_FIG
+%     png_name = strcat(figpath, 'optimalSVHT', urb_area, pollutant, '.png');
+%     saveas(gcf,png_name);
+% end
 % results - r 
+% first
+% LA NO2 = 976
+% LA O3 = 877
+% LA PM = 1064
+% CHI NO2 = 
+
+% second
 % LA NO2 = 992
 % LA O3 = 911
 % LA PM = 1023
-%% plot amplitudes of 1990 mrDMD
+% ATL NO2 = 912
+% ATL O3 = 992
+% ATL PM = 937
+% plot amplitudes of 1990 mrDMD
 
 %indt below adds lines to the tree figure to see when in time series it
 %lies. Comment out for final fig. 
@@ -125,7 +138,7 @@ shortInt = tree{L,J}.T;
 
 T = datetime(2000,1,1,0,0,0) + days(time(1:shortInt:end));
 set(gca, 'YTick', 0.5:(L+0.5), 'YTickLabel', low_f_cutoff*365);
-% set(gca,'XTick', (0:J-1) + 0.5,'XTickLabel',num2str([month(T),year(T)],'%d/%d'));
+%set(gca,'XTick', (0:J-1) + 0.5,'XTickLabel',num2str([month(T),year(T)],'%d/%d'));
 axis xy; axis tight; box on; grid on
 
 ylim = get(gca,'ylim');
@@ -144,9 +157,10 @@ colorbar;
 if PRINT_FIG
     %file_name = strcat(figpath, 'FIG_MRDMD_MAP.fig');
     %savefig(file_name);
-    print(strcat(figpath, 'FIG_MRDMD_MAP_', urb_area, pollutant, 'L=', string(levels), 'cyc=', string(max_cycles)), '-dpdf', '-fillpage');
+    %print(strcat(figpath, 'FIG_MRDMD_MAP_', urb_area, pollutant, 'cyc=', string(max_cycles)), '-dpdf', '-fillpage');
+    png_name = strcat(figpath, 'FIG_MRDMD_FIR_CALENDAR', urb_area, pollutant, 'cyc=', string(max_cycles), '.png');
+    saveas(gcf,png_name);
 end
-return;
 %% collect and display unique mrDMD modes
 
 lmap = []; jmap = [];
@@ -173,7 +187,7 @@ for l=1
         if PRINT_FIG
             %file_name = strcat(figpath, 'FIG_MRDMD_MODE_L=',string(l),'_J=',string(j),'.fig');
             %savefig(file_name);
-            png_name = strcat(figpath, 'FIG_MRDMD_', urb_area, pollutant, 'BG_MODE_L=',string(l),'_J=',string(j), 'L=', string(levels), 'cyc=', string(max_cycles), '.png');
+            png_name = strcat(figpath, 'FIG_MRDMD_FIR_', urb_area, pollutant, 'BG_MODE_', 'cyc=', string(max_cycles), '.png');
             saveas(gcf,png_name);
         end
     end
@@ -217,7 +231,7 @@ for l=1:L
             if PRINT_FIG
                 %file_name = strcat(figpath, 'FIG_MRDMD_MODE_L=',string(l),'_J=',string(j),'.fig');
                 %savefig(file_name);
-                png_name = strcat(figpath, 'FIG_MRDMD_', urb_area, pollutant, '_MODE_L=',string(l),'_J=',string(j), 'L=', string(levels), 'cyc=', string(max_cycles), '.png');
+                png_name = strcat(figpath, 'FIG_MRDMD_FIR_', urb_area, pollutant, '_MODE_L=',string(l),'_J=',string(j), '_cyc=', string(max_cycles), '.png');
                 saveas(gcf,png_name);
             end
         end

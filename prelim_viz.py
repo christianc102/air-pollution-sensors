@@ -15,7 +15,7 @@ from sklearn.preprocessing import StandardScaler
 sns.set_theme()
 sns.color_palette("deep")
 
-units_dict = {"NO2": " (ppb)", "O3": " (ppb)", "PM": u" (\u03bcg m$^{-3}$)", "O3NO2ratio": "", "O3PMratio": " (ppb/u\u03bcg m$^{-3}$)"}
+units_dict = {"NO2": " (ppb)", "O3": " (ppb)", "PM": u" (\u03bcg m$^{-3}$)", "O3NO2ratio": "", "O3PMratio": u" (ppb/\u03bcg m$^{-3}$)", "PMNO2ratio": u" (\u03bcg m$^{-3}$/ppb)", "O3normNO2normratio": ""}
 
 if len(sys.argv) != 3:
     print("Urban area or pollutant specified improperly--using defaults...")
@@ -27,29 +27,29 @@ else:
     pollutant = sys.argv[2]
 
 input_ncdf = f"./NetCDFs/{urban_area}{pollutant}.nc"
-dataset = xr.open_dataset(input_ncdf)
-# .sel(time=slice('2000-01-01', '2000-02-01'))
+dataset = xr.open_dataset(input_ncdf).sel(time=slice('2008-11-01', '2008-11-30'))
 times = dataset['time'].dt.strftime("%m/%d/%Y")
 print(dataset[f'{pollutant} concentration'])
 
-mean_data_t_series = dataset.mean(dim=["x", "y"])
-fig = plt.figure()
-mean_data_t_series_df = mean_data_t_series.to_dataframe()[[f"{pollutant} concentration"]].droplevel(1)
-mean_data_t_series_df = mean_data_t_series_df.rename(columns={f"{pollutant} concentration": f"{pollutant}{units_dict[pollutant]}"})
-scaler = StandardScaler()
-mean_concs = mean_data_t_series_df[f"{pollutant}{units_dict[pollutant]}"].replace(np.inf, 0)
-standardized_mean_t_series = scaler.fit_transform(mean_concs.to_numpy().reshape(-1,1))
-standardized_mean_t_series_df = pd.DataFrame(standardized_mean_t_series, index=mean_data_t_series_df.index, columns=[f"{pollutant}{units_dict[pollutant]}"])
-window_length = [50, 200, 730]
-mean_data_t_series_df[f'{window_length[0]}-day moving average'] = mean_data_t_series_df[f"{pollutant}{units_dict[pollutant]}"].rolling(window=window_length[0]).mean()
-mean_data_t_series_df[f'{window_length[1]}-day moving average'] = mean_data_t_series_df[f"{pollutant}{units_dict[pollutant]}"].rolling(window=window_length[1]).mean()
-mean_data_t_series_df[f'{window_length[2]//365}-yr moving average'] = mean_data_t_series_df[f"{pollutant}{units_dict[pollutant]}"].rolling(window=window_length[2]).mean()
-sns.lineplot(x=mean_data_t_series_df.index, y=f"{pollutant}{units_dict[pollutant]}", data=mean_data_t_series_df, alpha=0.5, linewidth=0.5, label="Data")
-sns.lineplot(x=mean_data_t_series_df.index, y=f"{window_length[0]}-day moving average", data=mean_data_t_series_df, label=f"{window_length[0]}-day moving average")
-sns.lineplot(x=mean_data_t_series_df.index, y=f"{window_length[1]}-day moving average", data=mean_data_t_series_df, label=f"{window_length[1]}-day moving average")
-sns.lineplot(x=mean_data_t_series_df.index, y=f"{window_length[2]//365}-yr moving average", data=mean_data_t_series_df, label=f"{window_length[2]//365}-year moving average")
-plt.xticks(fontsize=12)
-plt.savefig(f"./Visualizations/{urban_area}{pollutant}mean_time_series.png")
+# mean_data_t_series = dataset.mean(dim=["x", "y"])
+# fig = plt.figure()
+# mean_data_t_series_df = mean_data_t_series.to_dataframe()[[f"{pollutant} concentration"]].droplevel(1)
+# mean_data_t_series_df = mean_data_t_series_df.rename(columns={f"{pollutant} concentration": f"{pollutant}{units_dict[pollutant]}"})
+# print(mean_data_t_series_df.info())
+# # scaler = StandardScaler()
+# # mean_concs = mean_data_t_series_df[f"{pollutant}{units_dict[pollutant]}"].replace(np.inf, 0)
+# # standardized_mean_t_series = scaler.fit_transform(mean_concs.to_numpy().reshape(-1,1))
+# # standardized_mean_t_series_df = pd.DataFrame(standardized_mean_t_series, index=mean_data_t_series_df.index, columns=[f"{pollutant}{units_dict[pollutant]}"])
+# window_length = [50, 200, 730]
+# mean_data_t_series_df[f'{window_length[0]}-day moving average'] = mean_data_t_series_df[f"{pollutant}{units_dict[pollutant]}"].rolling(window=window_length[0]).mean()
+# mean_data_t_series_df[f'{window_length[1]}-day moving average'] = mean_data_t_series_df[f"{pollutant}{units_dict[pollutant]}"].rolling(window=window_length[1]).mean()
+# mean_data_t_series_df[f'{window_length[2]//365}-yr moving average'] = mean_data_t_series_df[f"{pollutant}{units_dict[pollutant]}"].rolling(window=window_length[2]).mean()
+# sns.lineplot(x=mean_data_t_series_df.index, y=f"{pollutant}{units_dict[pollutant]}", data=mean_data_t_series_df, alpha=0.5, linewidth=0.5, label="Data", legend=False)
+# sns.lineplot(x=mean_data_t_series_df.index, y=f"{window_length[0]}-day moving average", data=mean_data_t_series_df, label=f"{window_length[0]}-day moving average", legend=False)
+# sns.lineplot(x=mean_data_t_series_df.index, y=f"{window_length[1]}-day moving average", data=mean_data_t_series_df, label=f"{window_length[1]}-day moving average", legend=False)
+# sns.lineplot(x=mean_data_t_series_df.index, y=f"{window_length[2]//365}-yr moving average", data=mean_data_t_series_df, label=f"{window_length[2]//365}-year moving average", legend=False)
+# plt.xticks(fontsize=12)
+# plt.savefig(f"./Visualizations/{urban_area}{pollutant}mean_time_series.png")
 
 # fig = plt.figure()
 # standardized_mean_t_series_df[f'{window_length[0]}-day moving average'] = standardized_mean_t_series_df[f"{pollutant}{units_dict[pollutant]}"].rolling(window=window_length[0]).mean()
@@ -101,13 +101,14 @@ plt.savefig(f"./Visualizations/{urban_area}{pollutant}mean_time_series.png")
 # plt.xticks(rotation=90)
 # plt.savefig(f"./Visualizations/{urban_area}{pollutant}ARIMAmean_time_series.png")
 
-bounds_dict = {"NO2": 53, "O3": 70, "PM": 35, "O3NO2ratio": 4, "O3PMratio": 8}
+bounds_dict = {"NO2": 53, "O3": 70, "PM": 35, "O3NO2ratio": 4, "O3PMratio": 8, "PMNO2ratio": 2, "O3normNO2normratio": 4}
 
 pollution_data = dataset[f"{pollutant} concentration"].squeeze('band')
 fig = plt.figure()
 
 def animate(frame):
     fig.clear()
+    plt.set_cmap('inferno_r')
     ax = plt.subplot()
     current_data = pollution_data[frame, :, :]
     img = ax.imshow(current_data, vmin=0, vmax=bounds_dict[pollutant])
