@@ -3,12 +3,13 @@
 clear; close all; clc
 ncdfpath = 'NetCDFs/';
 maskpath = 'Masks/';
-figpath = 'Figures/First/';
+figpath = 'Figures/Sec/';
 
 % config
 urb_area = 'LosAngelesLongBeachAnaheimCA';
-pollutant = 'NO2';
+pollutant = 'PMNO2ratio';
 max_cycles = 1;
+levels = 7;
 
 % Set PRINT_FIG=true to export figures
 PRINT_FIG = true;
@@ -79,8 +80,8 @@ time = setdiff((1:4097), 3291);
 %time = setdiff((2112:6210),[3291,5689,5690]);
 
 [U,S,V] = svd(Y(:,1:length(time)),'econ');
-% [~,~,piv] = qr(U(:,1:30)',0);
-% qdeim = piv(1:30);
+[~,~,piv] = qr(U(:,1:30)',0);
+qdeim = piv(1:30);
 
 % finding optimal truncation (r) using optimal SVHT
 sigs = diag(S);
@@ -98,7 +99,7 @@ semilogy(sigs(sigs>thresh), 'bo', 'LineWidth', 1.5)
 plot([-20 length(sigs)], [thresh thresh], 'b--', 'LineWidth', 2)
 
 %tree = mrDMD_fb(Y(:,1:length(time)),dt,8,1,10, true); %change mrDMD modal tree here
-tree = mrDMD_fb(Y(:,1:length(time)), dt, length(sigs(sigs>thresh)), max_cycles, 13, true); %change mrDMD modal tree here
+tree = mrDMD_fb(Y(:,1:length(time)), dt, length(sigs(sigs>thresh)), max_cycles, levels, true); %change mrDMD modal tree here
 
 % if PRINT_FIG
 %     png_name = strcat(figpath, 'optimalSVHT', urb_area, pollutant, '.png');
@@ -125,9 +126,9 @@ tree = mrDMD_fb(Y(:,1:length(time)), dt, length(sigs(sigs>thresh)), max_cycles, 
 %mkelp: create test set of 10%, seed it. See old error code?
 
 %indt = [12, 120, 1000, 300, 900, 100, 2000, 3000, 2500, 3500]; % measure in summer months; mkelp adjust here for test/train set
-% rng(10)
+rng(10)
 %indt = randperm(2082, 400) %extrapolate
-% indt = randperm(4000, 400); %interpolate
+indt = randperm(4000, 400); %interpolate
 figure
 [ptree, map, low_f_cutoff] = mrDMD_map(tree);
 [L, J] = size(tree);
@@ -158,7 +159,7 @@ if PRINT_FIG
     %file_name = strcat(figpath, 'FIG_MRDMD_MAP.fig');
     %savefig(file_name);
     %print(strcat(figpath, 'FIG_MRDMD_MAP_', urb_area, pollutant, 'cyc=', string(max_cycles)), '-dpdf', '-fillpage');
-    png_name = strcat(figpath, 'FIG_MRDMD_SENS_FIR_CALENDAR', urb_area, pollutant, 'cyc=', string(max_cycles), '.png');
+    png_name = strcat(figpath, 'FIG_MRDMD_SENS_FIR_CALENDAR', urb_area, pollutant, 'cyc=', string(max_cycles), 'lvl=', string(levels), '.png');
     saveas(gcf,png_name);
 end
 
@@ -328,12 +329,12 @@ for Gamma=Gammas
     
     %mkelp: prints a sensor map figure for each gamma 
     figure;
-    display_sensors_LA(mask,sens,'r');
+    display_sensors_LA(mask,sens(1:100),'r');
     if PRINT_FIG
         %file_name = strcat(figpath, 'FIG_MRDMD_MAP.fig');
         %savefig(file_name);
         %print(strcat(figpath, 'FIG_MRDMD_MAP_', urb_area, pollutant, 'cyc=', string(max_cycles)), '-dpdf', '-fillpage');
-        png_name = strcat(figpath, 'FIG_MRDMD_SENS_FIR', urb_area, pollutant, 'cyc=', string(max_cycles), 'gamma=', num2str(Gamma), '.png');
+        png_name = strcat(figpath, 'FIG_MRDMD_SENS_FIR_1-100', urb_area, pollutant, 'cyc=', string(max_cycles), 'lvl=', string(levels), 'sens=', num2str(size(Lib, 2)), '.png');
         saveas(gcf,png_name);
     end
 
@@ -594,15 +595,15 @@ end
 
 %% display sensors
 % this section also only runs for one gamma value at a time
-
- figure;
- 
- display_sensors_MAD(mask,sens,'r');
- if PRINT_FIG
-     %export_fig([figpath 'recon_sensors0.pdf']);
-     print('figures/final_20220920_race_STL/recon_sensors_lastone_TEST', '-dpdf', '-fillpage');
-
- end
+% 
+%  figure;
+%  
+%  display_sensors_MAD(mask,sens,'r');
+%  if PRINT_FIG
+%      %export_fig([figpath 'recon_sensors0.pdf']);
+%      print('figures/final_20220920_race_STL/recon_sensors_lastone_TEST', '-dpdf', '-fillpage');
+% 
+%  end
 
 
 %% Constructs Cost and Error vs Gamma Plot, similar to one in Fig. 7 of sensors-cost-paper

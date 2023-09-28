@@ -7,9 +7,9 @@ figpath = 'Figures/Sec/';
 
 % config
 urb_area = 'LosAngelesLongBeachAnaheimCA';
-pollutant = 'PMNO2ratio';
+pollutant = 'O3NO2ratio';
 max_cycles = 1;
-levels = 5;
+levels = 7;
 
 % Set PRINT_FIG=true to export figures
 PRINT_FIG = true;
@@ -329,12 +329,12 @@ for Gamma=Gammas
     
     %mkelp: prints a sensor map figure for each gamma 
     figure;
-    display_sensors_LA(mask,sens,'r');
+    display_sensors_LA(mask,sens(101:200),'r');
     if PRINT_FIG
         %file_name = strcat(figpath, 'FIG_MRDMD_MAP.fig');
         %savefig(file_name);
         %print(strcat(figpath, 'FIG_MRDMD_MAP_', urb_area, pollutant, 'cyc=', string(max_cycles)), '-dpdf', '-fillpage');
-        png_name = strcat(figpath, 'FIG_MRDMD_SENS_SEC', urb_area, pollutant, 'cyc=', string(max_cycles), 'lvl=', string(levels), 'sens=', num2str(size(Lib, 2)), '.png');
+        png_name = strcat(figpath, 'FIG_MRDMD_SENS_SEC_101-200', urb_area, pollutant, 'cyc=', string(max_cycles), 'lvl=', string(levels), 'sens=', num2str(size(Lib, 2)), '.png');
         saveas(gcf,png_name);
     end
 
